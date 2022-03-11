@@ -58,18 +58,69 @@ class TransactionController extends Controller
 
     public function show($id)
     {
-        //
+        $transaction = Transaction::findOrFail($id);
+        $response = [
+            'message' => 'Detail of transaction ' . $id,
+            'data' => $transaction
+        ];
+
+        return response()->json($response, Response::HTTP_OK);
     }
 
 
     public function update(Request $request, $id)
     {
-        //
+
+        $transaction = Transaction::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'title' => ['required'],
+            'amount' => ['required', 'numeric'],
+            'type' => ['required', 'in:expense,revenue']
+        ]);
+
+        if($validator->fails()) {
+            return response()->json($validator->errors(), 
+            Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            
+            $transaction ->update($request->all());
+
+            $response = [
+                'message' => 'Transaction update',
+                'data' => $transaction
+            ];
+
+            return response()->json($response, Response::HTTP_OK);
+
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Failed ' . $e->errorInfo
+            ]);
+        }
     }
 
 
     public function destroy($id)
     {
-        //
+        $transaction = Transaction::findOrFail($id);
+        
+        try {
+            
+            $transaction ->delete();
+
+            $response = [
+                'message' => 'Transaction deleted',
+            ];
+
+            return response()->json($response, Response::HTTP_OK);
+
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Failed ' . $e->errorInfo
+            ]);
+        }
     }
 }
